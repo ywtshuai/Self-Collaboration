@@ -1,5 +1,4 @@
 import os
-import openai
 import time
 import copy
 import json

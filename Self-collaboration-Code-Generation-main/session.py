@@ -3,6 +3,9 @@ from utils import find_method_name
 import time
 from utils import code_truncate
 
+# 全局变量用于传递 tests
+_current_tests = None
+
 
 class Session(object):
     def __init__(self, TEAM, ANALYST, PYTHON_DEVELOPER, TESTER, requirement, model='gpt-3.5-turbo', majority=1, max_tokens=512,
@@ -43,11 +46,19 @@ class Session(object):
             
             tests = self.tester.test(code)
             test_report = code_truncate(tests)
+            # 将 tests 设置为全局变量，供 unsafe_execute 使用
+            global _current_tests
+            _current_tests = tests
             answer_report = unsafe_execute(self.before_func+code+'\n'+test_report+'\n'+f'check({method_name})', '')
             report = f'The compilation output of the preceding code is: {answer_report}'
 
             is_init = False
-            self.session_history['Round_{}'.format(i)] = {"code": code, "report": report}
+            self.session_history['Round_{}'.format(i)] = {
+                "code": code, 
+                "report": report,
+                "tests": tests,  # 保存原始测试用例
+                "test_report": test_report  # 保存处理后的测试用例
+            }
 
             if (plan == "error") or (code == "error") or (report == "error"):
                 code = "error"
@@ -101,6 +112,9 @@ class Session(object):
                 break
             tests = self.tester.test(code)
             test_report = code_truncate(tests)
+            # 将 tests 设置为全局变量，供 unsafe_execute 使用
+            global _current_tests
+            _current_tests = tests
             answer_report = unsafe_execute(self.before_func+code+'\n'+test_report+'\n'+f'check({method_name})', '')
             report = f'The compilation output of the preceding code is: {answer_report}'
 
