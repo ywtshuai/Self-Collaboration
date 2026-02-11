@@ -4,7 +4,6 @@
 
 import os
 import sys
-import re
 import json
 import time
 from typing import List, Dict, Any, Tuple
@@ -59,7 +58,6 @@ os.environ['MODEL_C'] = 'deepseek-chat'
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from session import Session
 from apps_eval.data import get_data, InstanceData
-from apps_eval.executor import evaluate_case
 from apps_eval.parallel_runner import eval_code
 
 # 导入角色定义
@@ -169,56 +167,6 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str, Path]) -> Di
             before_func=''
         )
         
-        # 注入自定义执行函数
-        import session as session_module
-        
-        # 保存对当前 session 的引用，以便访问 session_history
-        _session_ref = session
-        
-        def wrapped_unsafe_execute(full_code_with_test, empty_param):
-            """
-            包装函数，直接从 session_history 获取纯代码和 tests
-            避免从 full_code_with_test 中提取（可能包含 test_report）
-            """
-            try:
-                # 直接从 session_history 获取当前轮次的代码
-                # 查找最后一个有代码的轮次
-                code = None
-                for i in range(_session_ref.max_round - 1, -1, -1):
-                    round_key = f'Round_{i}'
-                    if round_key in _session_ref.session_history:
-                        code = _session_ref.session_history[round_key].get('code')
-                        if code:
-                            break
-                
-                # 如果 session_history 还没有 Round_0，说明是第一次调用
-                # 从 full_code_with_test 中提取纯代码
-                if code is None:
-                    # 提取策略：找到最后一个函数定义，去除 test_report 部分
-                    # test_report 通常以 "Input:" 或 "def check" 开始
-                    lines = full_code_with_test.split('\n')
-                    code_lines = []
-                    for line in lines:
-                        # 遇到测试用例标记就停止
-                        if line.strip().startswith('Input:') or line.strip().startswith('def check'):
-                            break
-                        code_lines.append(line)
-                    code = '\n'.join(code_lines).strip()
-                
-                # 从全局变量获取 tests
-                tests = session_module._current_tests
-                
-                if tests:
-                    return custom_unsafe_execute(code, '', tests)
-                else:
-                    return "Error: Tests not available (check session.py _current_tests)."
-                    
-            except Exception as e:
-                import traceback
-                return f"Error in wrapped_unsafe_execute: {e}\n{traceback.format_exc()}"
-        
-        session_module.unsafe_execute = wrapped_unsafe_execute
-        
         # 运行 Session
         code, session_history = session.run_session()
         
@@ -251,14 +199,15 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str, Path]) -> Di
                     with open(round_dir / f"code_iteration.py", "w", encoding="utf-8") as f:
                         f.write(round_data['code'])
                     
-                    # 保存报告
-                    with open(round_dir / f"report_iteration.txt", "w", encoding="utf-8") as f:
-                        f.write(round_data.get('report', ''))
+                    # 保存静态分析报告（Tester 的反馈）
+                    if 'tester_analysis' in round_data:
+                        with open(round_dir / f"tester_analysis.txt", "w", encoding="utf-8") as f:
+                            f.write(round_data['tester_analysis'])
                     
-                    # 同时保存原始测试用例
-                    if 'tests' in round_data:
-                        with open(round_dir / "tests_raw.txt", "w", encoding="utf-8") as f:
-                            f.write(round_data['tests'])
+                    # 保存状态
+                    if 'status' in round_data:
+                        with open(round_dir / f"status.txt", "w", encoding="utf-8") as f:
+                            f.write(round_data['status'])
         
         # 保存最终代码（添加必要的导入和入口点）
         final_code = code  # 初始化 final_code
@@ -312,116 +261,6 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str, Path]) -> Di
             'error': str(e),
             'tokens_used': 0
         }
-
-
-# ============================================================
-# Monkey Patch: 自定义执行函数
-# ============================================================
-
-def custom_unsafe_execute(code: str, report: str, tests: str = None) -> str:
-    """
-    自定义执行函数，用于替换 session.py 中的 unsafe_execute。
-    从 tests 或 report 中提取 Input/Output，使用 apps_eval.executor 执行代码。
-    
-    Args:
-        code: 生成的 Python 代码
-        report: 处理后的测试报告
-        tests: Tester 生成的原始测试用例（优先使用）
-    
-    Returns:
-        执行结果字符串："Code Test Passed." 或详细错误信息
-    """
-    # 优先使用原始测试用例
-    test_content = tests if tests else report
-    
-    # 先去除 markdown 代码块标记
-    test_content_cleaned = re.sub(r'```\s*', '', test_content)
-    
-    # 尝试多种正则模式提取 Input 和 Output
-    patterns = [
-        r'Input:\s*(.*?)\s*Output:\s*(.*?)(?=Input:|$)',  # 基础模式
-        r'(?:Test\s+)?Input[:\s]+(.*?)(?:Expected\s+)?Output[:\s]+(.*?)(?=(?:Test\s+)?Input:|$)',  # 宽松模式
-    ]
-    
-    matches = []
-    for pattern in patterns:
-        matches = re.findall(pattern, test_content_cleaned, re.DOTALL | re.IGNORECASE)
-        if matches:
-            break
-    
-    if not matches:
-        # 返回更详细的错误信息
-        return f"Error: No valid test cases found.\n\nTest content (first 300 chars):\n{test_content[:300]}"
-    
-    # 确保代码有必要的导入和入口点
-    imports_needed = []
-    
-    # 检查需要的导入
-    if 'import sys' not in code and ('sys.' in code or 'stdin' in code):
-        imports_needed.append('import sys')
-    
-    if 'cmp_to_key' in code and 'from functools import' not in code:
-        imports_needed.append('from functools import cmp_to_key')
-    
-    if 'math.' in code and 'import math' not in code:
-        imports_needed.append('import math')
-    
-    # 添加缺少的导入
-    if imports_needed:
-        code = '\n'.join(imports_needed) + '\n\n' + code
-    
-    # 添加入口点
-    if 'if __name__' not in code:
-        if 'def main()' in code or 'def solve()' in code:
-            # 找到主函数名
-            if 'def solve()' in code:
-                code = code + '\n\nif __name__ == "__main__":\n    solve()'
-            else:
-                code = code + '\n\nif __name__ == "__main__":\n    main()'
-    
-    # 遍历所有测试用例
-    all_passed = True
-    error_details = []
-    
-    for idx, (input_data, expected_output) in enumerate(matches, 1):
-        input_data = input_data.strip()
-        expected_output = expected_output.strip()
-        
-        # 使用 evaluate_case 执行代码
-        try:
-            result = evaluate_case(
-                code=code,
-                input_data=input_data,
-                expected=expected_output,
-                timeout=10.0,
-                mode='stdio'
-            )
-        except Exception as e:
-            result = type('obj', (object,), {
-                'status': 'RE',
-                'stdout': '',
-                'stderr': str(e),
-                'stdin': input_data,
-                'expected': expected_output
-            })()
-        
-        if result.status == "AC":
-            continue  # 通过，检查下一个
-        else:
-            all_passed = False
-            error_details.append(
-                f"Test Case {idx} Failed:\n"
-                f"  Status: {result.status}\n"
-                f"  Input:\n{input_data}\n"
-                f"  Expected:\n{expected_output}\n"
-                f"  Actual Output:\n{result.stdout}\n"
-                f"  Error: {result.stderr}\n"
-            )
-    
-    if all_passed:
-        return "Code Test Passed."
-    else:
-        return "\n".join(error_details)
 
 
 # ============================================================

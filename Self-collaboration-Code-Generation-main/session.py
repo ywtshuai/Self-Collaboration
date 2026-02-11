@@ -1,10 +1,7 @@
 from roles import Analyst, Coder, Tester
 from utils import find_method_name
 import time
-from utils import code_truncate
-
-# 全局变量用于传递 tests
-_current_tests = None
+import re
 
 
 class Session(object):
@@ -25,6 +22,7 @@ class Session(object):
         is_init=True
         self.session_history["plan"] = plan
         code = ""
+        final_code = ""
 
         for i in range(self.max_round):
 
@@ -42,36 +40,57 @@ class Session(object):
             
             if i == self.max_round-1:
                 self.session_history['Round_{}'.format(i)] = {"code": code}
+                final_code = code
                 break
             
-            tests = self.tester.test(code)
-            test_report = code_truncate(tests)
-            # 将 tests 设置为全局变量，供 unsafe_execute 使用
-            global _current_tests
-            _current_tests = tests
-            answer_report = unsafe_execute(self.before_func+code+'\n'+test_report+'\n'+f'check({method_name})', '')
-            report = f'The compilation output of the preceding code is: {answer_report}'
-
+            # 静态分析: Tester 直接分析代码，不执行
+            tester_analysis = self.tester.test(code)
+            
+            # 解析 Tester 的分析报告，判断是否通过
+            status_passed = self._parse_tester_status(tester_analysis)
+            
+            # 保存历史记录
             is_init = False
             self.session_history['Round_{}'.format(i)] = {
                 "code": code, 
-                "report": report,
-                "tests": tests,  # 保存原始测试用例
-                "test_report": test_report  # 保存处理后的测试用例
+                "tester_analysis": tester_analysis,
+                "status": "PASS" if status_passed else "FAIL"
             }
 
-            if (plan == "error") or (code == "error") or (report == "error"):
+            if (plan == "error") or (code == "error"):
                 code = "error"
                 break
             
-            if answer_report == "Code Test Passed.":
+            # 提前终止: 如果 Tester 判定 PASS，立即跳出
+            if status_passed:
+                final_code = code
                 break
+            else:
+                # FAIL: 将完整的分析报告作为反馈传给 Coder
+                report = f"The static analysis report:\n{tester_analysis}"
 
         self.analyst.itf.clear_history()
         self.coder.itf.clear_history()
         self.tester.itf.clear_history()
 
-        return code, self.session_history
+        return final_code if final_code else code, self.session_history
+    
+    def _parse_tester_status(self, tester_output: str) -> bool:
+        """
+        解析 Tester 的输出，判断是否通过 (PASS)
+        
+        Args:
+            tester_output: Tester 的完整输出文本
+            
+        Returns:
+            True 如果包含 [Status]: PASS，否则 False
+        """
+        # 使用正则表达式提取 [Status]: 后的内容（忽略大小写）
+        match = re.search(r'\[Status\]\s*:\s*(\w+)', tester_output, re.IGNORECASE)
+        if match:
+            status = match.group(1).strip().upper()
+            return status == "PASS"
+        return False
 
     def run_analyst_coder(self):
         plan = self.analyst.analyze()
@@ -93,6 +112,7 @@ class Session(object):
         report = ""
         is_init=True
         code = ""
+        final_code = ""
         
         for i in range(self.max_round):
 
@@ -109,198 +129,41 @@ class Session(object):
             
             if i == self.max_round-1:
                 self.session_history['Round_{}'.format(i)] = {"code": code}
+                final_code = code
                 break
-            tests = self.tester.test(code)
-            test_report = code_truncate(tests)
-            # 将 tests 设置为全局变量，供 unsafe_execute 使用
-            global _current_tests
-            _current_tests = tests
-            answer_report = unsafe_execute(self.before_func+code+'\n'+test_report+'\n'+f'check({method_name})', '')
-            report = f'The compilation output of the preceding code is: {answer_report}'
+                
+            # 静态分析: Tester 直接分析代码，不执行
+            tester_analysis = self.tester.test(code)
+            
+            # 解析 Tester 的分析报告，判断是否通过
+            status_passed = self._parse_tester_status(tester_analysis)
 
             is_init = False
-            self.session_history['Round_{}'.format(i)] = {"code": code, "report": report}
+            self.session_history['Round_{}'.format(i)] = {
+                "code": code, 
+                "tester_analysis": tester_analysis,
+                "status": "PASS" if status_passed else "FAIL"
+            }
 
-            if (code == "error") or (report == "error"):
-                code = "error"
+            if code == "error":
                 break
             
-            if report == "Code Test Passed.":
+            # 提前终止: 如果 Tester 判定 PASS，立即跳出
+            if status_passed:
+                final_code = code
                 break
+            else:
+                # FAIL: 将完整的分析报告作为反馈传给 Coder
+                report = f"The static analysis report:\n{tester_analysis}"
 
         self.analyst.itf.clear_history()
         self.coder.itf.clear_history()
         self.tester.itf.clear_history()
 
-        return code, self.session_history
+        return final_code if final_code else code, self.session_history
 
     def run_coder_only(self):
         plan = ""
         code = self.coder.implement(plan, is_init=True)
         self.coder.itf.clear_history()
         return code, self.session_history
-
-
-import contextlib
-import faulthandler
-import io
-import os
-import platform
-import signal
-import tempfile 
-
-def unsafe_execute(code, report):
-
-        with create_tempdir():
-
-            # These system calls are needed when cleaning up tempdir.
-            import os
-            import shutil
-            rmtree = shutil.rmtree
-            rmdir = os.rmdir
-            chdir = os.chdir 
-
-            # Disable functionalities that can make destructive changes to the test.
-            reliability_guard()
-
-            # Construct the check program and run it.
-            check_program = (
-                code + report
-            )
-
-            try:
-                exec_globals = {}
-                with swallow_io():
-                    timeout = 10
-                    with time_limit(timeout):
-                        exec(check_program, exec_globals)
-                result = "Code Test Passed."
-            except AssertionError as e:
-                result = f"failed with AssertionError. {e}"
-            except TimeoutException:
-                result = "timed out"
-            except BaseException as e:
-                result = f"{e}"
-
-
-            # Needed for cleaning up.
-            shutil.rmtree = rmtree
-            os.rmdir = rmdir
-            os.chdir = chdir
-            return result
-
-
-def reliability_guard(maximum_memory_bytes = None):
-    """
-    This disables various destructive functions and prevents the generated code
-    from interfering with the test (e.g. fork bomb, killing other processes,
-    removing filesystem files, etc.)
-
-    WARNING
-    This function is NOT a security sandbox. Untrusted code, including, model-
-    generated code, should not be blindly executed outside of one. See the 
-    Codex paper for more information about OpenAI's code sandbox, and proceed
-    with caution.
-    """
-
-    if maximum_memory_bytes is not None:
-        import resource
-        resource.setrlimit(resource.RLIMIT_AS, (maximum_memory_bytes, maximum_memory_bytes))
-        resource.setrlimit(resource.RLIMIT_DATA, (maximum_memory_bytes, maximum_memory_bytes))
-        if not platform.uname().system == 'Darwin':
-            resource.setrlimit(resource.RLIMIT_STACK, (maximum_memory_bytes, maximum_memory_bytes))
-
-    faulthandler.disable()
-
-    import builtins
-    builtins.exit = None
-    builtins.quit = None
-
-    import os
-    os.environ['OMP_NUM_THREADS'] = '1'
-
-    os.rmdir = None
-    os.chdir = None
-
-    import shutil
-    shutil.rmtree = None
-    shutil.move = None
-    shutil.chown = None
-
-    import subprocess
-    subprocess.Popen = None  # type: ignore
-
-    __builtins__['help'] = None
-
-    import sys
-    sys.modules['ipdb'] = None
-    sys.modules['joblib'] = None
-    sys.modules['resource'] = None
-    sys.modules['psutil'] = None
-    sys.modules['tkinter'] = None
-    
-@contextlib.contextmanager
-def time_limit(seconds: float):
-    def signal_handler(signum, frame):
-        raise TimeoutException("Timed out!")
-    signal.setitimer(signal.ITIMER_REAL, seconds)
-    signal.signal(signal.SIGALRM, signal_handler)
-    try:
-        yield
-    finally:
-        signal.setitimer(signal.ITIMER_REAL, 0)
-
-
-@contextlib.contextmanager
-def swallow_io():
-    stream = WriteOnlyStringIO()
-    with contextlib.redirect_stdout(stream):
-        with contextlib.redirect_stderr(stream):
-            with redirect_stdin(stream):
-                yield
-
-
-@contextlib.contextmanager
-def create_tempdir():
-    with tempfile.TemporaryDirectory() as dirname:
-        with chdir(dirname):
-            yield dirname
-            
-class TimeoutException(Exception):
-    pass
-
-
-class WriteOnlyStringIO(io.StringIO):
-    """ StringIO that throws an exception when it's read from """
-
-    def read(self, *args, **kwargs):
-        raise IOError
-
-    def readline(self, *args, **kwargs):
-        raise IOError
-
-    def readlines(self, *args, **kwargs):
-        raise IOError
-
-    def readable(self, *args, **kwargs):
-        """ Returns True if the IO object can be read. """
-        return False
-
-
-class redirect_stdin(contextlib._RedirectStream):  # type: ignore
-    _stream = 'stdin'
-
-
-@contextlib.contextmanager
-def chdir(root):
-    if root == ".":
-        yield
-        return
-    cwd = os.getcwd()
-    os.chdir(root)
-    try:
-        yield
-    except BaseException as exc:
-        raise exc
-    finally:
-        os.chdir(cwd)

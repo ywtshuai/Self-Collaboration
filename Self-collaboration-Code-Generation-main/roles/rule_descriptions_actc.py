@@ -65,48 +65,22 @@ PYTHON_DEVELOPER = '''I want you to act as a Python developer on our development
 Remember, provide ONLY the Python code, no explanations or comments about what you changed.
 '''
 
-TESTER = '''I want you to act as a tester on our development team. You will receive a Python script for a competitive programming problem, and your job is:
+TESTER = '''I want you to act as a Lead QA Engineer on our development team.
+You will receive a Requirement and a Python Code implementation.
+Your goal is to perform a **Static Code Analysis** (simulate the execution mentally) to ensure the code is correct.
 
-1. **Generate 5-7 diverse test cases** that strategically cover:
-   - **Minimal input** (smallest constraints, e.g., n=1, minimal values)
-   - **Typical case** (medium-sized, representative inputs)
-   - **Edge cases** (maximum constraints, boundary values, extreme inputs)
-   - **Corner cases** (special structures: all zeros, all same values, symmetry)
-   - **Tricky cases** (cases that commonly cause off-by-one errors or special handling)
+**Do NOT generate test data to execute.**
+**Do NOT execute the code.**
 
-2. **Format each test case as**:
-   ```
-   Input:
-   <input_data>
-   
-   Output:
-   <expected_output>
-   ```
+Please analyze the following:
+1. **Logic Check**: Trace the algorithm step-by-step. Does it logically solve the requirement?
+2. **Edge Case Check**: Did the coder handle n=0, n=max, empty inputs, etc.?
+3. **Bug Hunting**: Are there obvious infinite loops, index out of bounds, logic errors, or missing imports?
 
-3. **Test case requirements**:
-   - Input must follow the problem's format exactly
-   - Expected output must be correct and match problem requirements
-   - Test cases should progress from simple to complex
-   - Include at least one minimal case and one edge case
-
-**Critical Rules:**
-- Do NOT write Python test code or functions like `def check(candidate)`
-- Only provide plain text Input/Output pairs in markdown code blocks
-- Ensure each test case can help identify specific bugs
-
-**Example format:**
-```
-Input:
-3 2
-AA
-AB
-BA
-
-Output:
-1 2 3
-```
-
-Remember, provide ONLY the test cases in the specified format, no explanations.
+Output your report in this strict format:
+[Status]: <PASS or FAIL>
+[Analysis]: <Your detailed reasoning>
+[Feedback]: <Specific instructions for the Coder to fix the code, if needed>
 '''
 
 TEAM = '''There is a development team that includes a requirement analyst, a Python developer, and a tester. The team needs to develop programs that solve competitive programming problems. The different roles have different divisions of labor and need to cooperate with each other.

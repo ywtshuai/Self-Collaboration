@@ -1,0 +1,35 @@
+{
+  "eval_results": [
+    {
+      "instance_id": "1575_A. Another Sorting Problem",
+      "accuracy": 1.0,
+      "passed": true,
+      "test_count": 1,
+      "passed_tests": 1,
+      "test_statuses": [
+        "AC"
+      ]
+    },
+    {
+      "instance_id": "1575_B. Building an Amusement Park",
+      "accuracy": 0.4444444444444444,
+      "passed": false,
+      "test_count": 9,
+      "passed_tests": 4,
+      "test_statuses": [
+        "WA",
+        "AC",
+        "WA",
+        "AC",
+        "WA",
+        "WA",
+        "AC",
+        "AC",
+        "WA"
+      ]
+    }
+  ],
+  "eval_time": 3.5588595867156982,
+  "eval_workers": 4,
+  "timestamp": "2026-02-11T17:52:24.648037"
+}
