@@ -16,19 +16,19 @@ from pathlib import Path
 # 配置模型 API
 # ============================================================
 # 方案 1: DeepSeek (默认)
-#os.environ['MODEL_API_BASE_URL'] = 'https://api.deepseek.com/v1'
-#os.environ['MODEL_API_KEY_ENV'] = 'DEEPSEEK_API_KEY'
-#os.environ['DEEPSEEK_API_KEY'] = 'sk-cb2233a3ea8f475797b414d6d05365d8'
-#os.environ['MODEL_C'] = 'deepseek-chat'
+os.environ['MODEL_API_BASE_URL'] = 'https://api.deepseek.com/v1'
+os.environ['MODEL_API_KEY_ENV'] = 'DEEPSEEK_API_KEY'
+os.environ['DEEPSEEK_API_KEY'] = 'sk-cb2233a3ea8f475797b414d6d05365d8'
+os.environ['MODEL_C'] = 'deepseek-chat'
 
 # 方案 2: 阿里云 DashScope (Qwen 官方)
-os.environ['MODEL_API_BASE_URL'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-os.environ['MODEL_API_KEY_ENV'] = 'DASHSCOPE_API_KEY'
-os.environ['DASHSCOPE_API_KEY'] = 'sk-6e2d56a85bbf4ba6ac45bc5a3ca7126a'
+#os.environ['MODEL_API_BASE_URL'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+#os.environ['MODEL_API_KEY_ENV'] = 'DASHSCOPE_API_KEY'
+#os.environ['DASHSCOPE_API_KEY'] = 'sk-6e2d56a85bbf4ba6ac45bc5a3ca7126a'
 
 # 尝试使用完整的模型名称指定 32B 版本
 # 可能的格式（按优先级尝试）：
-os.environ['MODEL_C'] = 'qwen2.5-coder-32b-instruct'  # 方式1: 小写格式
+#os.environ['MODEL_C'] = 'qwen2.5-coder-32b-instruct'  # 方式1: 小写格式
 # os.environ['MODEL_C'] = 'Qwen2.5-Coder-32B-Instruct'  # 方式2: 标准格式
 # os.environ['MODEL_C'] = 'qwen-coder-plus'  # 方式3: 托管版本（可能是32B或更高）
 
@@ -76,7 +76,7 @@ from core.backend import _GLOBAL_LLM
 class DetailedLogger:
     """为每个题目创建详细的日志记录"""
     
-    def __init__(self, output_dir: str = "baseline_outputs_qwen"):
+    def __init__(self, output_dir: str = "baseline_outputs"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -128,23 +128,27 @@ class DetailedLogger:
 # 并行生成器
 # ============================================================
 
-def process_single_problem(args: Tuple[InstanceData, int, int, str]) -> Dict:
+def process_single_problem(args: Tuple[InstanceData, int, int, str, Path]) -> Dict:
     """
     处理单个问题的工作函数（用于并行）
     
     Args:
-        args: (instance, idx, total, output_dir) 元组
+        args: (instance, idx, total, output_dir, run_dir) 元组
     
     Returns:
         包含结果的字典
     """
-    instance, idx, total, output_dir = args
+    instance, idx, total, output_dir, run_dir = args
     
     try:
-        # 创建详细日志记录器
-        logger = DetailedLogger(output_dir)
-        problem_dir = logger.create_problem_dir(instance.instance_id)
-        logger.save_problem_info(problem_dir, instance)
+        # 直接使用传入的 run_dir，不创建新的 logger
+        # 为单个问题创建目录
+        problem_dir = run_dir / instance.instance_id
+        problem_dir.mkdir(exist_ok=True)
+        
+        # 保存问题描述
+        with open(problem_dir / "problem_statement.txt", "w", encoding="utf-8") as f:
+            f.write(instance.problem_statement)
         
         print(f"[{idx}/{total}] 开始处理: {instance.instance_id}")
         
@@ -158,10 +162,10 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str]) -> Dict:
             requirement=instance.problem_statement,
             model=model_name,
             majority=1,
-            max_tokens=1400,
-            temperature=0.3,
+            max_tokens=8192,
+            temperature=0,
             top_p=0.95,
-            max_round=2,
+            max_round=4,
             before_func=''
         )
         
@@ -218,23 +222,41 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str]) -> Dict:
         # 运行 Session
         code, session_history = session.run_session()
         
+        # 获取当前子进程的 token 使用量
+        tokens_used = 0
+        try:
+            # 导入 backend 模块以访问该子进程的 _GLOBAL_LLM
+            from core.backend import _get_llm
+            llm = _get_llm()
+            if hasattr(llm, 'total_tokens'):
+                tokens_used = llm.total_tokens
+                print(f"[{idx}/{total}] 📊 {instance.instance_id} 使用了 {tokens_used} tokens")
+        except Exception as e:
+            print(f"⚠️  警告: [{idx}/{total}] {instance.instance_id} 获取 token 使用量失败: {e}")
+        
         # 保存详细历史
-        logger.save_session_history(problem_dir, session_history)
+        with open(problem_dir / "session_history.json", "w", encoding="utf-8") as f:
+            json.dump(session_history, f, indent=2, ensure_ascii=False)
         
         # 保存每一轮的详细信息
         for round_key, round_data in session_history.items():
             if round_key.startswith('Round_'):
                 round_num = int(round_key.split('_')[1])
                 if 'code' in round_data:
-                    logger.save_round_info(
-                        problem_dir, round_num, 
-                        round_data['code'], 
-                        round_data.get('report', ''),
-                        'iteration'
-                    )
+                    # 创建轮次目录
+                    round_dir = problem_dir / f"round_{round_num}"
+                    round_dir.mkdir(exist_ok=True)
+                    
+                    # 保存代码
+                    with open(round_dir / f"code_iteration.py", "w", encoding="utf-8") as f:
+                        f.write(round_data['code'])
+                    
+                    # 保存报告
+                    with open(round_dir / f"report_iteration.txt", "w", encoding="utf-8") as f:
+                        f.write(round_data.get('report', ''))
+                    
                     # 同时保存原始测试用例
                     if 'tests' in round_data:
-                        round_dir = problem_dir / f"round_{round_num}"
                         with open(round_dir / "tests_raw.txt", "w", encoding="utf-8") as f:
                             f.write(round_data['tests'])
         
@@ -263,7 +285,9 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str]) -> Dict:
                 elif 'def main()' in final_code:
                     final_code += '\n\nif __name__ == "__main__":\n    main()'
             
-            logger.save_final_code(problem_dir, final_code)
+            # 保存最终代码
+            with open(problem_dir / "final_solution.py", "w", encoding="utf-8") as f:
+                f.write(final_code)
             print(f"[{idx}/{total}] ✅ {instance.instance_id} 生成成功")
         else:
             final_code = "# Generation failed"
@@ -274,7 +298,8 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str]) -> Dict:
             'code': final_code,  # 返回补全后的代码或失败标记
             'test_cases': instance.test_cases,
             'session_history': session_history,
-            'problem_dir': str(problem_dir)
+            'problem_dir': str(problem_dir),
+            'tokens_used': tokens_used
         }
         
     except Exception as e:
@@ -284,7 +309,8 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str]) -> Dict:
             'code': f"# Exception: {e}",
             'test_cases': instance.test_cases,
             'session_history': {},
-            'error': str(e)
+            'error': str(e),
+            'tokens_used': 0
         }
 
 
@@ -402,7 +428,7 @@ def custom_unsafe_execute(code: str, report: str, tests: str = None) -> str:
 # 主流程
 # ============================================================
 
-def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline_outputs_qwen", limit: int = None):
+def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline_outputs", limit: int = None):
     """
     主函数
     
@@ -451,9 +477,9 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
         # 并行生成
         print(f"🚀 使用 {workers} 个进程并行生成...")
         
-        # 准备参数
+        # 准备参数（传递统一的 run_dir）
         args_list = [
-            (instance, idx + 1, len(dataset), output_dir)
+            (instance, idx + 1, len(dataset), output_dir, logger.run_dir)
             for idx, instance in enumerate(dataset)
         ]
         
@@ -466,7 +492,7 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
         print("⏩ 顺序生成模式...")
         for idx, instance in enumerate(dataset):
             result = process_single_problem(
-                (instance, idx + 1, len(dataset), output_dir)
+                (instance, idx + 1, len(dataset), output_dir, logger.run_dir)
             )
             all_results.append(result)
     
@@ -559,14 +585,15 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
     
     total_time = time.time() - start_time
     
-    # 处理并行模式下的 token 统计问题
-    # 在并行模式下，子进程的 token 统计不会传回主进程
-    if _GLOBAL_LLM is None or not hasattr(_GLOBAL_LLM, 'total_tokens'):
-        # 尝试从 all_results 中提取 token 信息（如果有的话）
-        total_tokens = 0
-        print("⚠️  注意: 并行模式下无法统计 Token 使用量（需要从子进程返回）")
+    # 从所有结果中汇总 token 使用量
+    total_tokens = 0
+    for result in all_results:
+        total_tokens += result.get('tokens_used', 0)
+    
+    if total_tokens == 0:
+        print("⚠️  注意: 未能统计到 Token 使用量")
     else:
-        total_tokens = _GLOBAL_LLM.total_tokens
+        print(f"✅ 成功汇总所有子进程的 Token 使用量")
     
     # 打印最终结果
     print(f"\n📊 最终结果")
@@ -581,7 +608,7 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
         print(f"📈 平均每题 Token: {total_tokens/total_problems:.0f}")
         print(f"💰 估算成本 (按 $0.27/1M tokens): ${total_tokens * 0.27 / 1_000_000:.4f}")
     else:
-        print(f"🔢 总 Token 使用量: N/A (并行模式下未统计)")
+        print(f"🔢 总 Token 使用量: N/A (未能统计到 token 使用量)")
     
     print("=" * 80)
     
@@ -598,6 +625,7 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
             'code': result['code'],
             'accuracy': acc_rate,
             'passed': acc_rate == 1.0,
+            'tokens_used': result.get('tokens_used', 0),
             'test_results': [
                 {
                     'status': r.status,
@@ -623,8 +651,9 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
                 'evaluation': eval_time
             },
             'token_usage': {
-                'total': total_tokens if total_tokens > 0 else 'N/A (parallel mode)',
-                'average_per_problem': total_tokens / total_problems if (total_problems > 0 and total_tokens > 0) else 'N/A'
+                'total': total_tokens if total_tokens > 0 else 'N/A',
+                'average_per_problem': total_tokens / total_problems if (total_problems > 0 and total_tokens > 0) else 'N/A',
+                'per_problem_details': [r.get('tokens_used', 0) for r in all_results]
             },
             'config': {
                 'parallel': parallel,
@@ -639,7 +668,7 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
     logger.save_summary(summary)
     
     # 也保存到根目录（兼容旧版）
-    output_file = "baseline_results_qwen.json"
+    output_file = "baseline_results.json"
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
     
@@ -669,7 +698,7 @@ def main(parallel: bool = True, workers: int = None, output_dir: str = "baseline
             f.write(f"  - 总 Token: {total_tokens:,}\n")
             f.write(f"  - 平均每题 Token: {total_tokens/total_problems:.0f}\n\n")
         else:
-            f.write(f"  - 总 Token: N/A (并行模式下未统计)\n\n")
+            f.write(f"  - 总 Token: N/A (未能统计到 token 使用量)\n\n")
         f.write(f"详细结果:\n")
         for result in detailed_results:
             status = "✅ PASS" if result['passed'] else "❌ FAIL"
@@ -692,8 +721,8 @@ if __name__ == '__main__':
                        help='使用顺序生成（覆盖 --parallel）')
     parser.add_argument('--workers', type=int, default=None,
                        help='并行进程数（默认为 CPU 核心数的一半）')
-    parser.add_argument('--output-dir', type=str, default='baseline_outputs_qwen',
-                       help='输出目录（默认: baseline_outputs_qwen）')
+    parser.add_argument('--output-dir', type=str, default='baseline_outputs',
+                       help='输出目录（默认: baseline_outputs）')
     parser.add_argument('--limit', type=int, default=None,
                        help='限制处理的问题数量（用于测试，如: --limit 5）')
     

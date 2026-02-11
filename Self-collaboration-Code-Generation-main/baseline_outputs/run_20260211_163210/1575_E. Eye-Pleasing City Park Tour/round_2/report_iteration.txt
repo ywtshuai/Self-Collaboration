@@ -1,0 +1,185 @@
+The compilation output of the preceding code is: Test Case 1 Failed:
+  Status: RE
+  Input:
+2 0
+5 10
+1 2 0
+  Expected:
+25
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmprd3iwec9\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmprd3iwec9\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 2 Failed:
+  Status: RE
+  Input:
+2 1
+5 10
+1 2 1
+  Expected:
+25
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp54pf1il_\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp54pf1il_\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 3 Failed:
+  Status: RE
+  Input:
+3 0
+1 2 3
+1 2 0
+2 3 0
+  Expected:
+20
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp85cg0fa3\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp85cg0fa3\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 4 Failed:
+  Status: RE
+  Input:
+3 1
+1 2 3
+1 2 0
+2 3 1
+  Expected:
+23
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpdund5ono\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpdund5ono\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 5 Failed:
+  Status: RE
+  Input:
+4 1
+1 1 1 1
+1 2 0
+2 3 1
+3 4 0
+  Expected:
+30
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpno013c4c\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpno013c4c\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 6 Failed:
+  Status: RE
+  Input:
+5 2
+0 0 0 0 0
+1 2 0
+2 3 1
+3 4 0
+4 5 1
+  Expected:
+0
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp_i4i_9sx\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp_i4i_9sx\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 7 Failed:
+  Status: RE
+  Input:
+5 0
+1 3 2 6 4
+1 2 1
+1 4 0
+3 2 1
+2 5 0
+  Expected:
+45
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpnhwp7d76\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpnhwp7d76\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 8 Failed:
+  Status: RE
+  Input:
+3 1
+1 1 1
+1 2 1
+3 2 0
+  Expected:
+10
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp1va9yako\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp1va9yako\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+
+
+Test Case 9 Failed:
+  Status: RE
+  Input:
+6 3
+1000000000 1000000000 1000000000 1000000000 1000000000 1000000000
+1 2 0
+2 3 1
+3 4 0
+4 5 1
+5 6 0
+  Expected:
+999999918
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpn888iha5\solution.py", line 123, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpn888iha5\solution.py", line 42, in solve
+    ans = (ans + val) % MOD
+                        ^^^
+NameError: name 'MOD' is not defined
+

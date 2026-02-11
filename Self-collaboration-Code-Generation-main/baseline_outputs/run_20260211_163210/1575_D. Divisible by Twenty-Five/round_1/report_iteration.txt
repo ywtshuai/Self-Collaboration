@@ -1,0 +1,254 @@
+The compilation output of the preceding code is: Test Case 1 Failed:
+  Status: RE
+  Input:
+0
+  Expected:
+1
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpdkayssjw\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpdkayssjw\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 2 Failed:
+  Status: RE
+  Input:
+5
+  Expected:
+0
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpybbzadcd\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpybbzadcd\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 3 Failed:
+  Status: RE
+  Input:
+_0
+  Expected:
+9
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpwpcf0dzz\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpwpcf0dzz\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 4 Failed:
+  Status: RE
+  Input:
+X
+  Expected:
+1
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp5hb414mc\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp5hb414mc\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 5 Failed:
+  Status: RE
+  Input:
+_X
+  Expected:
+9
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpx40rxz1j\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpx40rxz1j\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 6 Failed:
+  Status: RE
+  Input:
+_XX
+  Expected:
+9
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp_iqr61r6\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp_iqr61r6\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 7 Failed:
+  Status: RE
+  Input:
+_00
+  Expected:
+9
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpm59bz71u\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpm59bz71u\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 8 Failed:
+  Status: RE
+  Input:
+0_25
+  Expected:
+0
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpz5qo4hru\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpz5qo4hru\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 9 Failed:
+  Status: RE
+  Input:
+25
+  Expected:
+1
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp8rg8tyem\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp8rg8tyem\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 10 Failed:
+  Status: RE
+  Input:
+_25
+  Expected:
+9
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpkn1trun1\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpkn1trun1\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 11 Failed:
+  Status: RE
+  Input:
+X00
+  Expected:
+9
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmprehp1iko\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmprehp1iko\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 12 Failed:
+  Status: RE
+  Input:
+_XX_XX
+  Expected:
+900
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp33x_t3yr\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp33x_t3yr\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 13 Failed:
+  Status: RE
+  Input:
+________
+  Expected:
+9000000
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp4b7_dz26\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp4b7_dz26\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 14 Failed:
+  Status: RE
+  Input:
+XXXX
+  Expected:
+0
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpjhgepf4q\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpjhgepf4q\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+
+
+Test Case 15 Failed:
+  Status: RE
+  Input:
+X0X0
+  Expected:
+0
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmploze29pb\solution.py", line 61, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmploze29pb\solution.py", line 34, in solve
+    for digits_tuple in product('0123456789', repeat=underscore_count):
+                        ^^^^^^^
+NameError: name 'product' is not defined
+

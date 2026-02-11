@@ -1,0 +1,63 @@
+The compilation output of the preceding code is: Test Case 4 Failed:
+  Status: WA
+  Input:
+4 2
+AA
+AB
+BA
+BB
+  Expected:
+1 2 3 4
+  Actual Output:
+2 1 4 3
+  Error: 
+
+Test Case 8 Failed:
+  Status: WA
+  Input:
+3 2
+AA
+AB
+BA
+  Expected:
+1 2 3
+  Actual Output:
+2 1 3
+  Error: 
+
+Test Case 13 Failed:
+  Status: WA
+  Input:
+2 2
+AA
+AB
+  Expected:
+1 2
+  Actual Output:
+2 1
+  Error: 
+
+Test Case 14 Failed:
+  Status: WA
+  Input:
+2 2
+AB
+AA
+  Expected:
+2 1
+  Actual Output:
+1 2
+  Error: 
+
+Test Case 15 Failed:
+  Status: WA
+  Input:
+3 2
+BA
+BB
+AA
+  Expected:
+3 1 2
+  Actual Output:
+3 2 1
+  Error: 

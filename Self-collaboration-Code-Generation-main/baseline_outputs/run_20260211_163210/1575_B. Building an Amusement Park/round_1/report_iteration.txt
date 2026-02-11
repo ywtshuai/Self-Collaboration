@@ -1,0 +1,144 @@
+The compilation output of the preceding code is: Test Case 2 Failed:
+  Status: WA
+  Input:
+2 2
+0 0
+0 0
+  Expected:
+0.0000000000
+  Actual Output:
+199999.9999999091
+  Error: 
+
+Test Case 3 Failed:
+  Status: WA
+  Input:
+3 2
+0 0
+1 0
+-1 0
+  Expected:
+0.5000000000
+  Actual Output:
+0.4999999874
+  Error: 
+
+Test Case 4 Failed:
+  Status: WA
+  Input:
+5 3
+0 0
+0 1
+0 -1
+1 0
+-1 0
+  Expected:
+0.5000000000
+  Actual Output:
+0.7071067557
+  Error: 
+
+Test Case 5 Failed:
+  Status: WA
+  Input:
+4 4
+-100000 0
+100000 0
+0 -100000
+0 100000
+  Expected:
+100000.0000000000
+  Actual Output:
+199999.9999999091
+  Error: 
+
+Test Case 6 Failed:
+  Status: WA
+  Input:
+8 4
+-3 1
+-4 4
+1 5
+2 2
+2 -2
+-2 -4
+-1 -1
+-6 0
+  Expected:
+3.1622776589
+  Actual Output:
+3.1622776078
+  Error: 
+
+Test Case 7 Failed:
+  Status: RE
+  Input:
+100000 1
+0 0
+1 1
+2 2
+3 3
+4 4
+5 5
+6 6
+7 7
+8 8
+9 9
+10 10
+... (continuing pattern up to 100000 points with coordinates (i,i) for i=0..99999)
+  Expected:
+0.0000000000
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp5ccvkjfi\solution.py", line 71, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmp5ccvkjfi\solution.py", line 13, in solve
+    x = int(next(it))
+        ^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '...'
+
+
+Test Case 8 Failed:
+  Status: RE
+  Input:
+100000 100000
+0 0
+0 0
+0 0
+... (100000 points all at origin)
+  Expected:
+0.0000000000
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpsbh_t6c6\solution.py", line 71, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpsbh_t6c6\solution.py", line 13, in solve
+    x = int(next(it))
+        ^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '...'
+
+
+Test Case 9 Failed:
+  Status: RE
+  Input:
+100000 50000
+0 0
+100000 100000
+-100000 100000
+100000 -100000
+-100000 -100000
+... (remaining points randomly distributed within bounds)
+  Expected:
+<some value ≤ 200000.0000000000>
+  Actual Output:
+
+  Error: Traceback (most recent call last):
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpwfwphsc3\solution.py", line 71, in <module>
+    solve()
+  File "C:\Users\杨文韬\AppData\Local\Temp\tmpwfwphsc3\solution.py", line 13, in solve
+    x = int(next(it))
+        ^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '...'
+
