@@ -10,7 +10,7 @@ __pycache__/
 *.so
 
 # 项目特定输出目录
-#Self-collaboration-Code-Generation-main/baseline_outputs/
+Self-collaboration-Code-Generation-main/baseline_outputs/
 Self-collaboration-Code-Generation-main/baseline_outputs_qwen/
 Self-collaboration-Code-Generation-main/scot_baseline_outputs/
 Self-collaboration-Code-Generation-main/scot_baseline_outputs_qwen/

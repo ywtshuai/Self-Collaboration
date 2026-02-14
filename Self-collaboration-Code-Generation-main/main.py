@@ -23,11 +23,11 @@ os.environ['MODEL_C'] = 'deepseek-chat'
 # 方案 2: 阿里云 DashScope (Qwen 官方)
 #os.environ['MODEL_API_BASE_URL'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 #os.environ['MODEL_API_KEY_ENV'] = 'DASHSCOPE_API_KEY'
-#os.environ['DASHSCOPE_API_KEY'] = 'sk-6e2d56a85bbf4ba6ac45bc5a3ca7126a'
+#os.environ['DASHSCOPE_API_KEY'] = 'sk-bf8c6bd3b0364cf1835351ccb25b2806'
 
 # 尝试使用完整的模型名称指定 32B 版本
 # 可能的格式（按优先级尝试）：
-#os.environ['MODEL_C'] = 'qwen2.5-coder-32b-instruct'  # 方式1: 小写格式
+#os.environ['MODEL_C'] = 'qwen3-coder-30b-a3b-instruct'  # 方式1: 小写格式
 # os.environ['MODEL_C'] = 'Qwen2.5-Coder-32B-Instruct'  # 方式2: 标准格式
 # os.environ['MODEL_C'] = 'qwen-coder-plus'  # 方式3: 托管版本（可能是32B或更高）
 
@@ -152,6 +152,17 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str, Path]) -> Di
         
         # 初始化 Session（从环境变量读取模型名称）
         model_name = os.environ.get('MODEL_C', 'deepseek-chat')
+        
+        # 在运行 Session 前记录起始 token 数
+        tokens_before = 0
+        try:
+            from core.backend import _get_llm
+            llm = _get_llm()
+            if hasattr(llm, 'total_tokens'):
+                tokens_before = llm.total_tokens
+        except Exception as e:
+            pass  # 忽略错误，继续执行
+        
         session = Session(
             TEAM=TEAM,
             ANALYST=ANALYST,
@@ -160,24 +171,25 @@ def process_single_problem(args: Tuple[InstanceData, int, int, str, Path]) -> Di
             requirement=instance.problem_statement,
             model=model_name,
             majority=1,
-            max_tokens=8192,
-            temperature=0,
+            max_tokens=4096,  # 增加token限制，支持更复杂的代码
+            temperature=0,  # 轻微增加创造性，帮助跳出局部最优
             top_p=0.95,
-            max_round=4,
+            max_round=4,  # 从4增加到6，给更多迭代机会
             before_func=''
         )
         
         # 运行 Session
         code, session_history = session.run_session()
         
-        # 获取当前子进程的 token 使用量
+        # 获取当前子进程的 token 使用量（计算差值）
         tokens_used = 0
         try:
             # 导入 backend 模块以访问该子进程的 _GLOBAL_LLM
             from core.backend import _get_llm
             llm = _get_llm()
             if hasattr(llm, 'total_tokens'):
-                tokens_used = llm.total_tokens
+                tokens_after = llm.total_tokens
+                tokens_used = tokens_after - tokens_before  # 计算本次问题使用的 token 数
                 print(f"[{idx}/{total}] 📊 {instance.instance_id} 使用了 {tokens_used} tokens")
         except Exception as e:
             print(f"⚠️  警告: [{idx}/{total}] {instance.instance_id} 获取 token 使用量失败: {e}")

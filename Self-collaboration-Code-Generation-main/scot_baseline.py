@@ -25,8 +25,8 @@ from pathlib import Path
 # 方案 2: 阿里云 DashScope (Qwen 官方) - 如果要使用，请注释掉方案1，启用方案2
 os.environ['MODEL_API_BASE_URL'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 os.environ['MODEL_API_KEY_ENV'] = 'DASHSCOPE_API_KEY'
-os.environ['DASHSCOPE_API_KEY'] = 'sk-bf8c6bd3b0364cf1835351ccb25b2806'
-os.environ['MODEL_C'] = 'qwen2.5-coder-32b-instruct'
+os.environ['DASHSCOPE_API_KEY'] = 'sk-8331f6ecc85f44bbab18dfde4c072337'
+os.environ['MODEL_C'] = 'qwen3-coder-30b-a3b-instruct'
 
 # 方案 3: 硅基流动 (第三方)
 #os.environ['MODEL_API_BASE_URL'] = 'https://api.siliconflow.cn/v1'

@@ -7,7 +7,7 @@ import tqdm
 
 from core import interface
 from utils import code_truncate, construct_system_message
-from roles.instruction import INSTRUCTPLAN, INSTRUCTREPORT, INSTRUCTCODE
+from roles.instruction import INSTRUCTPLAN, INSTRUCTREPORT, INSTRUCTCODE, INSTRUCTFIX
 
 class Coder(object):
     def __init__(self, TEAM, PYTHON_DEVELOPER, requirement, model='gpt-3.5-turbo', majority=1, max_tokens=512,
@@ -41,14 +41,11 @@ class Coder(object):
             time.sleep(5)
             return "error"
         
-        if 'gpt' not in self.model:
-            generation = responses[0][responses[0].find("def"):]
-            tem = [s for s in generation.split('\n\n') if 'def ' in s or s[:1] == ' ']
-            code = '\n\n'.join(tem).strip('```').strip()
-        else:
-            code = code_truncate(responses[0])
+        # 统一使用 code_truncate 处理所有模型的响应
+        code = code_truncate(responses[0])
         
-        self.history_message = self.history_message[:-1]
+        # 删除construct_with_report添加的2条消息
+        #self.history_message = self.history_message[:-2]
         self.history_message_append(code, "assistant")
     
         return code
@@ -63,7 +60,10 @@ class Coder(object):
         if report != "":
             if is_init:
                 instruction = INSTRUCTPLAN.format(report=report.strip())
+                self.history_message_append(instruction)
+                self.history_message_append(INSTRUCTCODE.format(requirement=self.requirement))
             else:
+                # 收到tester的feedback，使用修复指令
                 instruction = INSTRUCTREPORT.format(report=report.strip())
-            self.history_message_append(instruction)
-            self.history_message_append(INSTRUCTCODE.format(requirement=self.requirement))
+                self.history_message_append(instruction)
+                self.history_message_append(INSTRUCTFIX.format(requirement=self.requirement))
